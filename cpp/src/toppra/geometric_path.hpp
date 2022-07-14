@@ -42,7 +42,12 @@ public:
    */
   virtual Vectors eval(const Vector &positions, int order = 0) const;
 
-  Vector proposeGridpoints() const;
+  /**
+   * \brief Evaluate and propose gridpoints.
+   *
+   *
+   */
+  Vector proposeGridpoints(double maxErrThreshold=1e-4, int maxIteration=100, double maxSegLength=0.05, int minNbPoints=100) const;
 
   /**
    * \brief Dimension of the configuration space
