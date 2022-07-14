@@ -42,6 +42,8 @@ public:
    */
   virtual Vectors eval(const Vector &positions, int order = 0) const;
 
+  Vector proposeGridpoints() const;
+
   /**
    * \brief Dimension of the configuration space
    */

@@ -123,6 +123,7 @@ void PathParametrizationAlgorithm::initialize() {
     throw std::logic_error("You must set a solver first.");
   Bound I (m_path->pathInterval());
 
+  // Intiialize the gridpoints based on N
   if (m_data.gridpoints.size() == 0)
     m_data.gridpoints = Vector::LinSpaced(m_N + 1, I(0), I(1));
   else if (m_data.gridpoints.size() != m_N + 1)

@@ -1,5 +1,12 @@
 #ifndef TOPPRA_TEST_UTILS_HPP
 #define TOPPRA_TEST_UTILS_HPP
+#include <vector>
+#include <iostream>
+
+#include <toppra/toppra.hpp>
+
+
+#define PRINT(X) std::cout << X << std::endl
 
 namespace toppra {
 
