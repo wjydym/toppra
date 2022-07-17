@@ -1,5 +1,7 @@
 #include "toppra/geometric_path.hpp"
 #include "toppra/toppra.hpp"
+#include <forward_list>
+#include <iterator>
 #include <vector>
 namespace toppra {
 
@@ -13,53 +15,48 @@ Vectors GeometricPath::eval(const Vector &positions, int order) const {
   };
 
 
-Vector GeometricPath::proposeGridpoints(double maxErrThreshold, int maxIteration, double maxSegLength, int minNbPoints) const {
-  std::vector<value_type> gridpoints_vec;
-  gridpoints_vec.push_back(pathInterval()[0]);
-  gridpoints_vec.push_back(pathInterval()[1]);
+Vector GeometricPath::proposeGridpoints(double max_err_threshold, int max_iteration, double max_seg_length, int min_nb_points) const {
+  std::forward_list<value_type> gridpoints {pathInterval()[0], pathInterval()[1]};
+  int nb_gridpoints = 2;
 
   // Add points according to error threshold
-  for (auto i=0; i < maxIteration; i++){
+  for (auto iter=0; iter < max_iteration; iter++){
     bool add_new_points = false;
-    auto current_size = gridpoints_vec.size();
-    for (auto j=0; j < current_size - 1; j++){
+    for (auto point = gridpoints.begin(); std::next(point, 1) != gridpoints.end(); point++){
 
-      value_type p_mid = 0.5 * (gridpoints_vec[j] + gridpoints_vec[j + 1]);
-      auto dist = gridpoints_vec[j + 1] - gridpoints_vec[j];
+      value_type p_mid = 0.5 * (*point + *std::next(point, 1));
+      auto dist = (*std::next(point, 1) - *point);
 
-      if (dist > maxSegLength){
-        gridpoints_vec.push_back(p_mid);
+      if (dist > max_seg_length){
+        gridpoints.emplace_after(point, p_mid);
         add_new_points = true;
+        nb_gridpoints ++;
         continue;
       }
 
       auto max_err = (0.5 * eval_single(p_mid, 2) * dist * dist).cwiseAbs().maxCoeff();
-      if (max_err > maxErrThreshold){
-        gridpoints_vec.push_back(p_mid);
+      if (max_err > max_err_threshold){
+        gridpoints.emplace_after(point, p_mid);
         add_new_points = true;
+        nb_gridpoints ++;
         continue;
       }
     }
 
     if (!add_new_points) break;
-    sort(gridpoints_vec.begin(), gridpoints_vec.end());
   }
 
   // Add points according to smallest number of points
-  while (gridpoints_vec.size() < minNbPoints){
-
-    auto current_size = gridpoints_vec.size();
-    for (auto j=0; j < current_size - 1; j++){
-      value_type p_mid = 0.5 * (gridpoints_vec[j] + gridpoints_vec[j + 1]);
-      gridpoints_vec.push_back(p_mid);
+  while (nb_gridpoints < min_nb_points){
+    for(auto point=gridpoints.begin(); std::next(point, 1) != gridpoints.end(); std::advance(point, 2)){
+      value_type p_mid = 0.5 * (*point + *std::next(point, 1));
+      gridpoints.emplace_after(point, p_mid);
+      nb_gridpoints++;
     }
-
-    sort(gridpoints_vec.begin(), gridpoints_vec.end());
   }
 
   // Return the Eigen vector
-  Vector gridpoints(gridpoints_vec.size());
-  for (int i=0; i < gridpoints_vec.size(); i++) gridpoints(i) = gridpoints_vec[i];
-  return gridpoints;
+  std::vector<value_type> result(gridpoints.begin(), gridpoints.end());
+  return Eigen::Map<toppra::Vector, Eigen::Unaligned>(result.data(), result.size());
 }
 }

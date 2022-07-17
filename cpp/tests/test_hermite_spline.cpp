@@ -45,8 +45,14 @@ TEST(SplineHermite, ProposeGridpoints) {
   auto gridpoint = path.proposeGridpoints();
 
   // Basic assertion
-  ASSERT_TRUE(gridpoint.size() > 0);
+  EXPECT_TRUE(gridpoint.size() > 0);
   PRINT(gridpoint);
+
+  // Gridpoints must be increasing
+  auto N = gridpoint.size();
+  Vector gridpoint_diff {N - 1};
+  gridpoint_diff = gridpoint.tail(N - 1) - gridpoint.head(N - 1);
+  EXPECT_TRUE(gridpoint_diff.minCoeff() > 0);
   
 }
 
